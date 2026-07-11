@@ -4,6 +4,7 @@ const { listingSchema } = require("../schema.js");
 const ExpressError = require("../utils/ExpressError.js");
 const wrapAsync = require("../utils/wrapAsync.js");
 const Listing = require("../models/listing.js");
+const { isLoggedIn } = require("../middleware.js");
 
 const validateListing = (req, res, next) => {
   let { error } = listingSchema.validate(req.body);
@@ -24,7 +25,7 @@ router.get(
 );
 
 // NEW ROUTE
-router.get("/new", (req, res) => {
+router.get("/new", isLoggedIn, (req, res) => {
   res.render("listings/new.ejs");
 });
 
@@ -45,6 +46,7 @@ router.get(
 // CREATE ROUTE =>
 router.post(
   "/",
+  isLoggedIn,
   validateListing, // passing validateListing as a MIDDLEWARE.
   wrapAsync(async (req, res, next) => {
     // so we can directly make a new Instance from here
@@ -57,6 +59,7 @@ router.post(
 // EDIT ROUTE =>
 router.get(
   "/:id/edit",
+  isLoggedIn,
   wrapAsync(async (req, res) => {
     let { id } = req.params; // parsing the Id
     const listing = await Listing.findById(id);
@@ -71,6 +74,7 @@ router.get(
 // UPDATE ROUTE =>
 router.put(
   "/:id",
+  isLoggedIn,
   validateListing,
   wrapAsync(async (req, res) => {
     if (!req.body.listing) {
@@ -86,6 +90,7 @@ router.put(
 // DELETE ROUTE =>
 router.delete(
   "/:id",
+  isLoggedIn,
   wrapAsync(async (req, res) => {
     let { id } = req.params;
     let dltList = await Listing.findByIdAndDelete(id);
