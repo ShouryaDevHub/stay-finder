@@ -73,16 +73,17 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get("/demouser", async (req, res) => {
-  let fakeUser = new User({
-    email: "abc@gmail.com",
-    username: "delta-student",
-  });
+// DEMO USER =>
+// app.get("/demouser", async (req, res) => {
+//   let fakeUser = new User({
+//     email: "abc@gmail.com",
+//     username: "delta-student",
+//   });
 
-  // "register" is s Static Function which take :- User , Password and also any callback if wanted.
-  let registeredUser = await User.register(fakeUser, "helloworld");
-  res.send(registeredUser);
-});
+//   // "register" is s Static Function which take :- User , Password and also any callback if wanted.
+//   let registeredUser = await User.register(fakeUser, "helloworld");
+//   res.send(registeredUser);
+// });
 
 // Instead of writting all the listings Routes , we only write this line in app.js =>
 app.use("/listings", listingRouter);
