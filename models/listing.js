@@ -33,6 +33,10 @@ const listingSchema = new Schema({
       ref: "Review", // Review Model as a refference.
     },
   ],
+  owner: {
+    type: Schema.Types.ObjectId,
+    ref: "user",
+  },
 });
 
 // Middleware =>
