@@ -1,19 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const { listingSchema } = require("../schema.js");
 const ExpressError = require("../utils/ExpressError.js");
 const wrapAsync = require("../utils/wrapAsync.js");
 const Listing = require("../models/listing.js");
-const { isLoggedIn } = require("../middleware.js");
-
-const validateListing = (req, res, next) => {
-  let { error } = listingSchema.validate(req.body);
-  if (error) {
-    throw new ExpressError(400, error);
-  } else {
-    next();
-  }
-};
+const { isLoggedIn, isOwner, validateListing } = require("../middleware.js");
 
 // INDEX ROUTE =>
 router.get(
@@ -34,11 +24,14 @@ router.get(
   "/:id",
   wrapAsync(async (req, res) => {
     let { id } = req.params; // parsing the Id
-    const listing = await Listing.findById(id).populate("reviews");
+    const listing = await Listing.findById(id)
+      .populate("reviews")
+      .populate("owner");
     if (!listing) {
       req.flash("error", "Listing does not exist");
       return res.redirect("/listings");
     }
+    console.log(listing);
     res.render("listings/show.ejs", { listing });
   }),
 );
@@ -51,6 +44,7 @@ router.post(
   wrapAsync(async (req, res, next) => {
     // so we can directly make a new Instance from here
     const newListing = new Listing(req.body.listing);
+    newListing.owner = req.user._id;
     await newListing.save();
     req.flash("success", "New Listing Created!");
     res.redirect("/listings");
@@ -60,6 +54,7 @@ router.post(
 router.get(
   "/:id/edit",
   isLoggedIn,
+  isOwner,
   wrapAsync(async (req, res) => {
     let { id } = req.params; // parsing the Id
     const listing = await Listing.findById(id);
@@ -75,12 +70,16 @@ router.get(
 router.put(
   "/:id",
   isLoggedIn,
+  isOwner,
   validateListing,
   wrapAsync(async (req, res) => {
     if (!req.body.listing) {
       throw new ExpressError(400, "Send valid data for listings");
     }
     let { id } = req.params; // parsing the Id
+    // Instead of direct find the listing and updating , we break it into 2 parts :-
+    // 1st => search the list and only those can edit who are the owner of that listing
+    // 2nd => then update it
     await Listing.findByIdAndUpdate(id, { ...req.body.listing });
     req.flash("success", "Listing Updated!");
     res.redirect(`/listings/${id}`); // this will get redirect to the show route automatically .
@@ -91,6 +90,7 @@ router.put(
 router.delete(
   "/:id",
   isLoggedIn,
+  isOwner,
   wrapAsync(async (req, res) => {
     let { id } = req.params;
     let dltList = await Listing.findByIdAndDelete(id);
