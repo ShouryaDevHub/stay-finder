@@ -18,6 +18,10 @@ async function main() {
 
 const initDB = async () => {
   await Listing.deleteMany({}); // dlt the previous data
+  initData.data = initData.data.map((obj) => ({
+    ...obj,
+    owner: "6a50d47e2a7e59906b27784d",
+  }));
 
   // initData apne aap me ek OBJECT hai or uss object me hum key data ko access kr rhe
   await Listing.insertMany(initData.data);
