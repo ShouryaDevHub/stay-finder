@@ -1,5 +1,5 @@
-// Created a Middleware for it =>
 const Listing = require("./models/listing");
+const Review = require("./models/review");
 const { listingSchema, reviewSchema } = require("./schema.js");
 const ExpressError = require("./utils/ExpressError.js");
 
@@ -46,4 +46,14 @@ module.exports.validateReview = (req, res, next) => {
   } else {
     next();
   }
+};
+
+module.exports.isReviewAuthor = async (req, res, next) => {
+  let { id, reviewId } = req.params;
+  const review = await Review.findById(reviewId); // 1st step
+  if (!review.author._id.equals(res.locals.currUser._id)) {
+    req.flash("error", "Access Denied");
+    return res.redirect(`/listings/${id}`);
+  }
+  next();
 };
