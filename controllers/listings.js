@@ -40,7 +40,10 @@ module.exports.renderEditForm = async (req, res) => {
     req.flash("error", "Listing does not exist");
     return res.redirect("/listings");
   }
-  res.render("listings/edit.ejs", { listing });
+
+  let originalImageUrl = listing.image.url;
+  originalImageUrl = originalImageUrl.replace("/upload", "/upload/w_250");
+  res.render("listings/edit.ejs", { listing, originalImageUrl });
 };
 
 module.exports.updateListing = async (req, res) => {
@@ -51,7 +54,16 @@ module.exports.updateListing = async (req, res) => {
   // Instead of direct find the listing and updating , we break it into 2 parts :-
   // 1st => search the list and only those can edit who are the owner of that listing
   // 2nd => then update it
-  await Listing.findByIdAndUpdate(id, { ...req.body.listing });
+  let listing = await Listing.findByIdAndUpdate(id, { ...req.body.listing });
+
+  if (typeof req.file !== "undefined") {
+    // extra logic for saving the new image if given in edit form.
+    let url = req.file.path;
+    let filename = req.file.filename;
+    listing.image = { url, filename };
+    await listing.save();
+  }
+
   req.flash("success", "Listing Updated!");
   res.redirect(`/listings/${id}`); // this will get redirect to the show route automatically .
 };
